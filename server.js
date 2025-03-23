@@ -22,15 +22,15 @@ app.get('/', (req, res) => {
 });
 
 
-app.post('/api', (req,res)=>{
-  res.json({message:"Hello World"})
+app.post('/api', (req, res) => {
+  res.json({ message: "Hello World" })
 })
 
 app.post('/send-message', async (req, res) => {
   console.log(req.body)
   try {
     const { to, message } = req.body;
-    
+
     const response = await client.messages.create({
       from: `whatsapp:${process.env.TWILIO_WHATSAPP_NUMBER}`,
       to: `whatsapp:${to}`,
@@ -48,7 +48,7 @@ app.post('/send-message', async (req, res) => {
 app.post('/start-campaign', async (req, res) => {
   try {
     const { numbers, message } = req.body;
-    const campaignId = Date.now().toString(); 
+    const campaignId = Date.now().toString();
     const results = [];
 
     for (const number of numbers) {
@@ -99,6 +99,17 @@ app.post('/start-campaign', async (req, res) => {
   }
 });
 
+app.post('/receiveMessage',async(req,res)=>{
+  console.log(req.body);
+  const response = await fetch("https://sbl-gamma.vercel.app/api/chat",{
+    method:"POST",
+    body:JSON.stringify({message:req.body})
+  })
+  const data = await response.json()
+  console.log(data)
+  res.json({message:"Message received"})
+})
+
 app.post('/webhook', async (req, res) => {
   const { From, Body, MessageSid } = req.body;
   const phoneNumber = From ? From.replace('whatsapp:', '') : '';
@@ -143,7 +154,7 @@ app.post('/webhook', async (req, res) => {
 app.get('/conversation/:number', (req, res) => {
   const { number } = req.params;
   const conversation = conversations.get(number);
-  
+
   if (!conversation) {
     return res.status(404).json({ error: 'Conversation not found' });
   }
@@ -155,9 +166,9 @@ app.get('/conversation/:number', (req, res) => {
 async function generateResponse(message, conversation) {
   // Add your custom logic here to generate appropriate responses
   // You can use the conversation history to provide context-aware responses
-  
+
   const lowerMessage = message.toLowerCase();
-  
+
   if (lowerMessage.includes('price')) {
     return 'Our prices start from $99. Would you like to know more details?';
   } else if (lowerMessage.includes('hello') || lowerMessage.includes('hi')) {
@@ -165,7 +176,7 @@ async function generateResponse(message, conversation) {
   } else if (lowerMessage.includes('thank')) {
     return "You're welcome! Is there anything else I can help you with?";
   }
-  
+
   return "Thank you for your message. Our team will get back to you shortly.";
 }
 
